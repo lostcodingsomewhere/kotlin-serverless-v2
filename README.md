@@ -28,8 +28,8 @@ NOTE: Make sure you're using Java 8 (v1.8.*)
 
 1. Install it using npm:
   ```shell
-  git clone git@github.com:thejnaut1/lostcoders.git
-  cd lostcoders/kotlin/kotlin-serverless
+  git clone git@github.com:lostcodingsomewhere/kotlin-serverless-v2.git
+  cd kotlin-serverless-v2
   npm install serverless -g
   npm init -f
   npm install
@@ -55,7 +55,7 @@ NOTE: Make sure you're using Java 8 (v1.8.*)
 3. [Update Security group to have access between ec2 and rds](https://aws.amazon.com/getting-started/tutorials/configure-connect-serverless-mysql-database-aurora/)
     - Follow [Step 4] but note below:
     - Edit inbound to add SSH from all and MYSQL/Aurora from all
-4. Add lostcoders database to the newly created db
+4. Add api database to the newly created db
     - Connect to the ec2 instance
     - ```shell 
       ssh -i <path to pem file> ec2-user@<ec2 public url>
@@ -76,7 +76,7 @@ NOTE: Make sure you're using Java 8 (v1.8.*)
     - Vpc:, securityGroupIds, subnetIds
     - Environment: database_url, database_driver, database_user, database_password
     - For local env use after you have [created a mysql database and added a lostcoders db](https://dev.mysql.com/doc/mysql-getting-started/en/):
-        - database_url: jdbc:mysql://localhost:3306/lostcoders
+        - database_url: jdbc:mysql://localhost:3306/api
         - database_driver: com.mysql.jdbc.Driver
         - database_user: root
         - database_password: <whatever password you set>
