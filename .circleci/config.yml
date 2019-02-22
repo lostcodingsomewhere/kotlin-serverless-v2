@@ -1,0 +1,96 @@
+version: 2.1
+
+executors:
+  java-executor:
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+    working_directory: ~/lostcoders-api
+  serverless-executor:
+    docker:
+      - image: amaysim/serverless:1.36.3
+    working_directory: ~/lostcoders-api
+
+jobs:
+  build:
+    executor: java-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/lostcoders-api
+      - restore_cache:
+          key: lostcoders-api-{{ checksum "pom.xml" }}
+      - run:
+          name: Get maven dependancies
+          command: 'mvn dependency:go-offline'
+      - save_cache: # saves the project dependencies
+          paths:
+          - ~/.m2
+          key: lostcoders-api-{{ checksum "pom.xml" }}
+      - run:
+          name: Build, Test, and Package latest jar
+          command: 'mvn clean compile assembly:single'
+      - persist_to_workspace:
+          root: .
+          paths: target/lostcoders-api-dev-jar-with-dependencies.jar
+  deploy-dev:
+    executor: serverless-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/lostcoders-api
+      - run:
+          name: Deploy to development
+          command: |
+            cat serverless-dev.yml > serverless.yml
+            serverless deploy --stage development
+  deploy-prod:
+    executor: serverless-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/lostcoders-api
+      - run:
+          name: Deploy to production
+          command: |
+            cat serverless-prod.yml > serverless.yml
+            serverless deploy --stage production
+  postman-dev:
+    executor: java-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/lostcoders-api
+      - restore_cache:
+          key: postman-dev-{{ checksum "./src/test/lostcoders-API.postman_collection.json" }}
+      - run:
+          name: Get postman dependancies
+          command: 'npm i -g newman'
+      - save_cache: # saves the project dependencies
+          paths:
+          - ~/lostcoders-api/node_modules
+          key: postman-dev-{{ checksum "~/lostcoders-api/src/test/lostcoders-API.postman_collection.json" }}
+      - run:
+          name: Run postman against dev env
+          command: 'postman ~/lostcoders-api/src/test/lostcoders-API.postman_collection.json'
+
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - build
+  build_and_deploy:
+    jobs:
+    - build
+    - deploy-dev:
+        requires:
+          - build
+        filters:
+          branches:
+            only: master
+    - deploy-prod:
+        requires:
+        - build
+        filters:
+          branches:
+            only: production

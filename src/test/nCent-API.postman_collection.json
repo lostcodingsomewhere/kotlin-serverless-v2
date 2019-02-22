@@ -1,0 +1,255 @@
+{
+	"info": {
+		"name": "Kotlin Serverless API",
+		"_postman_id": "31c709d0-5ed0-28af-17ba-29990102196f",
+		"description": "This collection is a series of tests to confirm the health of the production lostcoders API environment. All tests are end-to-end integration tests.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "UserAccount",
+			"description": "This folder contains all of the requests that go out to the UserAccounts Controller: https://github.com/lostcoders/lostcoders-api-v2/blob/master/src/main/controllers/UserAccountController.kt",
+			"item": [
+				{
+					"name": "UserAccount create",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6c15778d-e62d-40eb-9ef7-9ab2763cbf31",
+								"type": "text/javascript",
+								"exec": [
+									"const email = \"dev5@lostcoders.io\";",
+									"pm.environment.set(\"testUserEmail\", email);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "b7b0824f-58fa-4970-8c05-cdf6be611fc8",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.set(\"testUser\", pm.response.json().value);",
+									"pm.environment.set(\"testUserId\", pm.response.json().value.id);",
+									"pm.environment.set(\"apiKey\", pm.response.json().value.apiCreds.apiKey)",
+									"",
+									"const secretKey = pm.response.json().value.apiCreds.secretKey;",
+									"const encodedApiKeyAndSecret = btoa(`${pm.apiKey}:${secretKey}`);",
+									"pm.environment.set(\"encodedApiKeyAndSecret\", encodedApiKeyAndSecret); ",
+									"",
+									"const testUserEmail = pm.environment.get(\"testUserEmail\");",
+									"",
+									"pm.test(\"User created with correct metadata\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.value.userMetadata.email).to.eql(testUserEmail);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{testUserEmail}}\",\n  \"firstname\": \"dev\",\n  \"lastname\": \"lostcoders\"\n}"
+						},
+						"url": {
+							"raw": "https://faw5rz7094.execute-api.us-west-1.amazonaws.com/development/user",
+							"protocol": "https",
+							"host": [
+								"faw5rz7094",
+								"execute-api",
+								"us-west-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"development",
+								"user"
+							]
+						},
+						"description": "retrieve the data of a single user"
+					},
+					"response": []
+				},
+				{
+					"name": "UserAccount findOne",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "dd9e9744-3bf9-4799-b129-336f3f810741",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "c093d67e-a241-43fe-99ba-20422c696349",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const testUserEmail = pm.environment.get(\"testUserEmail\");",
+									"",
+									"pm.test(\"Correct user retrieved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userMetadata.email).to.eql(testUserEmail);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic {{encodedApiKeyAndSecret}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://faw5rz7094.execute-api.us-west-1.amazonaws.com/development/user?userId={{testUserId}}&id={{testUserId}}",
+							"protocol": "https",
+							"host": [
+								"faw5rz7094",
+								"execute-api",
+								"us-west-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"development",
+								"user"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{testUserId}}",
+									"equals": true
+								},
+								{
+									"key": "id",
+									"value": "{{testUserId}}",
+									"equals": true
+								}
+							]
+						},
+						"description": null
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "40c8f118-60cb-452a-8bac-a96d24f6f7a2",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "192eb675-b579-488b-925b-b5b9bf76358a",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "UserAccount delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "61b2daab-9d14-4bf9-b66a-3b81fb4a8919",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic {{encodedApiKeyAndSecret}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://faw5rz7094.execute-api.us-west-1.amazonaws.com/development/user?userId={{testUserId}}",
+					"protocol": "https",
+					"host": [
+						"faw5rz7094",
+						"execute-api",
+						"us-west-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"development",
+						"user"
+					],
+					"query": [
+						{
+							"key": "userId",
+							"value": "{{testUserId}}",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
