@@ -8,6 +8,7 @@ import kotlinserverless.framework.services.SOAResult
 import kotlinserverless.framework.services.SOAResultType
 import main.daos.*
 import main.helpers.ControllerHelper
+import main.helpers.JsonHelper
 import main.services.user_account.GetUserAccountService
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -23,10 +24,10 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
     @Throws(RouterException::class, NotFoundException::class)
     override fun locate(request: ApiGatewayRequest): Any? {
         val path = request.input["path"]
-        for ((regex, inputModel, outputModel, controller) in ROUTER.routes) {
-			if (!Regex(regex).matches(path as CharSequence)) {
-				continue
-			}
+        for ((regex, inputModel, outputModel, controller, shouldValidatePost, shouldValidatePut, shouldValidateGet) in ROUTER.routes) {
+            if (!Regex(regex).matches(path as CharSequence)) {
+                continue
+            }
 
             val outputModelClass = Class.forName(outputModel).kotlin
             val controllerClass = Class.forName(controller).kotlin
@@ -35,6 +36,7 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
             val func = controllerClass.members.find { it.name == "defaultRouting" }
             val requestData = ControllerHelper.getRequestData(request)
             val user = findUserByRequest(requestData)
+            val method = (requestData.request.input[ControllerHelper.HTTP_METHOD] as String).toLowerCase()
             val result = try {
                 func?.call(
                     controllerInstance,
@@ -42,7 +44,11 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
                     outputModelClass::class.java,
                     requestData,
                     user,
-                    controllerInstance
+                    controllerInstance,
+                    method,
+                    shouldValidatePost,
+                    shouldValidatePut,
+                    shouldValidateGet
                 ) as SOAResult<Any>
             }
             catch(e: InvocationTargetException) {
@@ -58,8 +64,8 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
                 throw InternalError(result.message)
             }
         }
-		
-		throw RouterException(path as? String ?: "")
+
+        throw RouterException(path as? String ?: "")
     }
 
     fun findUserByRequest(requestData: ControllerHelper.RequestData) : UserAccount? {

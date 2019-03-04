@@ -12,7 +12,6 @@ import main.services.user_account.*
 
 class UserAccountController: DefaultController<UserAccount>(), RestController<UserAccount, UserAccount> {
     override fun findOne(user: UserAccount, requestData: RequestData, id: Int?): SOAResult<UserAccount> {
-        validateApiKey(user, requestData)
         return DaoService.execute {
             var result = SOAResult<UserAccount?>(SOAResultType.FAILURE, null)
             if (requestData.queryParams["email"] != null) {
@@ -37,8 +36,6 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
     }
 
     override fun delete(user: UserAccount, requestData: RequestData): SOAResult<Boolean?> {
-        validateApiKey(user!!, requestData)
-
         return DaoService.execute {
             val result = DeleteUserAccountService.execute(user)
             DaoService.throwOrReturn(result.result, result.message)
@@ -47,7 +44,6 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
     }
 
     fun reset(user: UserAccount, requestData: RequestData): SOAResult<NewUserAccount> {
-        validateApiKey(user, requestData)
         return DaoService.execute {
             val result = ResetUserAccount.execute(user)
             DaoService.throwOrReturn(result.result, result.message)
