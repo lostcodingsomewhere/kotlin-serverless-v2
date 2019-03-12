@@ -19,7 +19,7 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
             } else if (id != null) {
                 result = GetUserAccountService.execute(id)
             }
-            DaoService.throwOrReturn(result.result, result.message)
+            DaoService.throwOrReturn(result)
             return@execute result.data!!
         }
     }
@@ -27,10 +27,10 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
     override fun create(user: UserAccount?, requestData: RequestData): SOAResult<NewUserAccount> {
         return DaoService.execute {
             val result = GenerateUserAccountService.execute(
-                requestData.body["email"]!! as String,
-                requestData.body["firstname"]!! as String,
-                requestData.body["lastname"]!! as String)
-            DaoService.throwOrReturn(result.result, result.message)
+                requestData.body["email"] as String,
+                requestData.body["firstname"] as String,
+                requestData.body["lastname"] as String)
+            DaoService.throwOrReturn(result)
             return@execute result.data!!
         }
     }
@@ -38,7 +38,7 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
     override fun delete(user: UserAccount, requestData: RequestData): SOAResult<Boolean?> {
         return DaoService.execute {
             val result = DeleteUserAccountService.execute(user)
-            DaoService.throwOrReturn(result.result, result.message)
+            DaoService.throwOrReturn(result)
             return@execute result.data
         }
     }
@@ -46,7 +46,7 @@ class UserAccountController: DefaultController<UserAccount>(), RestController<Us
     fun reset(user: UserAccount, requestData: RequestData): SOAResult<NewUserAccount> {
         return DaoService.execute {
             val result = ResetUserAccount.execute(user)
-            DaoService.throwOrReturn(result.result, result.message)
+            DaoService.throwOrReturn(result)
             return@execute result.data!!
         }
     }
