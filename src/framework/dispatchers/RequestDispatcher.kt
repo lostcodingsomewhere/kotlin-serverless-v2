@@ -4,6 +4,7 @@ import kotlinserverless.framework.models.*
 import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import framework.services.DaoService
 import kotlinserverless.framework.services.SOAResult
 import kotlinserverless.framework.services.SOAResultType
 import main.daos.*
@@ -37,23 +38,32 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
             val requestData = ControllerHelper.getRequestData(request)
             val user = findUserByRequest(requestData)
             val method = (requestData.request.input[ControllerHelper.HTTP_METHOD] as String).toLowerCase()
+
             val result = try {
-                func?.call(
-                    controllerInstance,
-                    inputModel,
-                    outputModelClass::class.java,
-                    requestData,
-                    user,
-                    controllerInstance,
-                    method,
-                    shouldValidatePost,
-                    shouldValidatePut,
-                    shouldValidateGet
-                ) as SOAResult<Any>
+                val executionResult = DaoService.execute {
+                    func?.call(
+                            controllerInstance,
+                            inputModel,
+                            outputModelClass::class.java,
+                            requestData,
+                            user,
+                            controllerInstance,
+                            method,
+                            shouldValidatePost,
+                            shouldValidatePut,
+                            shouldValidateGet
+                    ) as SOAResult<Any>
+                }
+                DaoService.throwOrReturn(executionResult)
+                executionResult.data!!
             }
             catch(e: InvocationTargetException) {
                 Handler.log(e, e.message)
                 throw e.targetException
+            }
+            catch(e: KotlinNullPointerException) {
+                Handler.log(e, e.message)
+                throw NotFoundException()
             }
 
             if(result.result == SOAResultType.SUCCESS) {
@@ -68,7 +78,7 @@ open class RequestDispatcher: Dispatcher<ApiGatewayRequest, Any> {
         throw RouterException(path as? String ?: "")
     }
 
-    fun findUserByRequest(requestData: ControllerHelper.RequestData) : UserAccount? {
+    private fun findUserByRequest(requestData: ControllerHelper.RequestData) : UserAccount? {
         return GetUserAccountService.execute(
             requestData.queryParams["userId"]?.toString()?.toInt(),
             requestData.queryParams["email"]?.toString(),

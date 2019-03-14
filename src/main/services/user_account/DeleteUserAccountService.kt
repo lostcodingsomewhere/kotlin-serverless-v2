@@ -11,6 +11,6 @@ object DeleteUserAccountService {
     fun execute(user: UserAccount) : SOAResult<Boolean> {
         user.userMetadata.delete()
         user.apiCreds.delete()
-        return SOAResult(SOAResultType.SUCCESS, null, null)
+        return SOAResult(SOAResultType.SUCCESS, null, true)
     }
 }
